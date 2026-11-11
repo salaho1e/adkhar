@@ -2,17 +2,19 @@ name: Send Adhkar
 
 on:
   schedule:
-    - cron: "0 5 * * *"    # الصباح: 06:00 بتوقيت UTC+1
-    - cron: "30 16 * * *"  # المساء: 17:30 بتوقيت UTC+1
+    - cron: "30 5 * * *"   # الصباح 06:30 (UTC+1)
+    - cron: "0 16 * * *"   # المساء 17:00 (UTC+1)
+    - cron: "0 6 * * 5"    # الجمعة 07:00 (UTC+1)
   workflow_dispatch:
     inputs:
       kind:
-        description: "morning or evening"
+        description: "morning / evening / friday"
         default: "morning"
         type: choice
         options:
           - morning
           - evening
+          - friday
 
 jobs:
   send:
@@ -28,5 +30,11 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           THREAD_ID: ${{ secrets.THREAD_ID }}
-          KIND: ${{ github.event.inputs.kind || (github.event.schedule == '0 5 * * *' && 'morning' || 'evening') }}
-        run: python send.py "$KIND"
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_KIND: ${{ github.event.inputs.kind }}
+        run: |
+          if [ -n "$INPUT_KIND" ]; then KIND="$INPUT_KIND"
+          elif [ "$SCHEDULE" = "30 5 * * *" ]; then KIND=morning
+          elif [ "$SCHEDULE" = "0 16 * * *" ]; then KIND=evening
+          else KIND=friday; fi
+          python send.py "$KIND"
