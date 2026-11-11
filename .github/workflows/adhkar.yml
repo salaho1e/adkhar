@@ -1,0 +1,32 @@
+name: Send Adhkar
+
+on:
+  schedule:
+    - cron: "0 5 * * *"    # الصباح: 06:00 بتوقيت UTC+1
+    - cron: "30 16 * * *"  # المساء: 17:30 بتوقيت UTC+1
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "morning or evening"
+        default: "morning"
+        type: choice
+        options:
+          - morning
+          - evening
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Send
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+          THREAD_ID: ${{ secrets.THREAD_ID }}
+          KIND: ${{ github.event.inputs.kind || (github.event.schedule == '0 5 * * *' && 'morning' || 'evening') }}
+        run: python send.py "$KIND"
