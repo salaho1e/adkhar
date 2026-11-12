@@ -22,7 +22,7 @@ def call(method, data=None, files=None, timeout=60):
             time.sleep(wait + 1)
             continue
         break
-    print(method, r.status_code, r.text[:120])
+    print(method, r.status_code)  # لا نطبع الرد حتى لا تظهر أرقام المحادثات في سجل عام
     if not r.ok:
         # لا نطبع الرابط حتى لا يظهر الـ Token في السجل
         raise RuntimeError(f"{method}: {r.status_code} {r.text[:200]}")
