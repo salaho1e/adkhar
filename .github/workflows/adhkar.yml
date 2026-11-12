@@ -28,6 +28,7 @@ jobs:
       - name: Send
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TARGETS: ${{ vars.TARGETS }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
           THREAD_ID: ${{ secrets.THREAD_ID }}
           SCHEDULE: ${{ github.event.schedule }}
