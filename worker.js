@@ -1,10 +1,6 @@
-// بوت الأذكار على Cloudflare Worker
-//  - يرد فوراً على القائمة /menu في الخاص والمجموعات والتوبيكات
-//  - يرسل الأذكار تلقائياً في الأوقات المحددة لكل مجموعة (Cron كل دقيقة)
-// النصوص والصور تُقرأ من adhkar.json و images/ في المستودع العام.
 
 const RAW = "https://raw.githubusercontent.com/salaho1e/adkhar/main";
-const DEFAULT_TZ = "Africa/Algiers"; // توقيت الجزائر UTC+1
+const DEFAULT_TZ = "Africa/Algiers"; 
 const KINDS = ["morning", "evening", "friday"];
 const DEFAULT_TIMES = { morning: "06:30", evening: "17:00", friday: "07:00" };
 
@@ -18,7 +14,7 @@ const MENU = {
   ],
 };
 
-let ME = null; // اسم البوت
+let ME = null; 
 const cache = new Map();
 
 async function cached(key, ttlMs, fn) {
@@ -30,7 +26,7 @@ async function cached(key, ttlMs, fn) {
 }
 
 export default {
-  // ردود تيليغرام (Webhook)
+ 
   async fetch(request, env, ctx) {
     if (request.method !== "POST") return new Response("ok");
     if (
@@ -44,7 +40,6 @@ export default {
     return new Response("ok");
   },
 
-  // الإرسال المجدول: يعمل كل دقيقة ويرسل لمن حان وقته
   async scheduled(event, env, ctx) {
     ctx.waitUntil(
       runSchedule(env, new Date(event.scheduledTime)).catch((e) =>
@@ -53,8 +48,6 @@ export default {
     );
   },
 };
-
-/* ---------- الجدولة ---------- */
 
 function localNow(env, date) {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -68,8 +61,6 @@ function localNow(env, date) {
   return { time: `${get("hour")}:${get("minute")}`, weekday: get("weekday") };
 }
 
-// كل سطر:  رقم_المجموعة[:رقم_التوبيك]  morning=06:30 evening=17:00 friday=07:00
-// وإن لم تُكتب أوقات تُستعمل الأوقات الافتراضية.
 function parseTargets(raw) {
   const out = [];
   for (const line of (raw || "").split("\n")) {
@@ -104,8 +95,6 @@ async function runSchedule(env, date) {
   }
 }
 
-/* ---------- تيليغرام ---------- */
-
 async function tg(env, method, body) {
   const r = await fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`, {
     method: "POST",
@@ -139,9 +128,8 @@ async function handle(update, env) {
   if (!msg || !msg.text) return;
   const text = msg.text.trim();
   const [name, target] = text.startsWith("/") ? text.split(/\s/)[0].slice(1).split("@") : ["", ""];
-  if (target && target.toLowerCase() !== (await botName(env))) return; // أمر لبوت آخر
+  if (target && target.toLowerCase() !== (await botName(env))) return; 
 
-  // /id يعرض رقم المحادثة (والتوبيك) لنسخه إلى TARGETS
   if (name.toLowerCase() === "id") {
     const thread = msg.is_topic_message && msg.message_thread_id ? `:${msg.message_thread_id}` : "";
     await tg(env, "sendMessage", {
@@ -153,8 +141,6 @@ async function handle(update, env) {
   if (msg.chat.type !== "private" && !["menu", "start", "adhkar"].includes(name.toLowerCase())) return;
   await tg(env, "sendMessage", { ...destOf(msg), text: "اختر ما تريد عرضه 👇", reply_markup: MENU });
 }
-
-/* ---------- المحتوى ---------- */
 
 async function loadItems(kind) {
   const data = await cached("adhkar.json", 300000, async () => {
@@ -179,7 +165,6 @@ async function sendKind(env, d, kind) {
   }
 }
 
-// صفحات المجلد يجب أن تُسمّى 01.jpg و02.jpg ... بالترتيب
 async function listFolder(folder) {
   return cached(`folder:${folder}`, 300000, async () => {
     const pages = [];
@@ -194,7 +179,7 @@ async function listFolder(folder) {
 }
 
 async function sendPhoto(env, d, url, caption) {
-  const short = caption.length <= 1024 ? caption : ""; // حد تعليق الصورة
+  const short = caption.length <= 1024 ? caption : ""; 
   const j = await tg(env, "sendPhoto", { ...d, photo: url, caption: short });
   if (j.ok && caption && !short) await tg(env, "sendMessage", { ...d, text: caption });
   return j.ok;
@@ -202,7 +187,7 @@ async function sendPhoto(env, d, url, caption) {
 
 async function sendAlbum(env, d, urls, caption) {
   const chunks = [];
-  for (let i = 0; i < urls.length; i += 10) chunks.push(urls.slice(i, i + 10)); // الحد 10 صور
+  for (let i = 0; i < urls.length; i += 10) chunks.push(urls.slice(i, i + 10));      
   const last = chunks.length - 1;
   if (last > 0 && chunks[last].length === 1) chunks[last].unshift(chunks[last - 1].pop());
   const short = caption.length <= 1024 ? caption : "";
