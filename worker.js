@@ -1,7 +1,3 @@
-// بوت الأذكار على Cloudflare Worker
-//  - يرد فوراً على القائمة /menu في الخاص والمجموعات والتوبيكات
-//  - يرسل الأذكار تلقائياً في الأوقات المحددة لكل مجموعة (Cron كل دقيقة)
-// النصوص والصور تُقرأ من adhkar.json و images/ في المستودع العام.
 
 const RAW = "https://raw.githubusercontent.com/salaho1e/adkhar/main";
 const DEFAULT_TZ = "Africa/Algiers"; // توقيت الجزائر UTC+1
